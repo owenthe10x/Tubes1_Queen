@@ -4,9 +4,10 @@ from typing import Optional
 from game.logic.base import BaseLogic
 from game.models import GameObject, Board, Position
 from ..util import get_direction
-from ..util import closest_diamond
+from ..util import get_closest_diamond
 from ..util import get_rank
 from ..util import get_time_left
+from ..util import get_second_closest_diamond_position
 
 
 class Greedy(BaseLogic):
@@ -15,7 +16,7 @@ class Greedy(BaseLogic):
         # Optional[Position] is a way to say that the value can be None
         self.goal_position: Optional[Position] = None
         self.current_direction = 0
-        self.safe_mode = False
+        self.mode = "safe"
 
     def next_move(self, board_bot: GameObject, board: Board):
         other_robots = board.bots
@@ -23,23 +24,26 @@ class Greedy(BaseLogic):
         props = board_bot.properties
         print("waktu", get_time_left(board.game_objects))
 
-        # Check if we need to play safe
-        if (
-            get_rank(other_robots, board_bot.id) == 1
-            and get_time_left(board.game_objects) < 10000
-        ):
-            self.safe_mode = True
-
-        if self.safe_mode:
-            print("true")
+        # Check if we need to play safe by checking diamonds in inventory
+        if props.diamonds >= 4:
+            self.mode = "safe"
+        else:
+            self.mode = "normal"
 
         # Check if inventory is full
         if props.diamonds >= 4:
             # Move to base
             base = board_bot.properties.base
             self.goal_position = base
+        elif (
+            get_closest_diamond(board_bot.position, diamonds).properties.points == 2
+            and props.diamonds >= 4
+        ):
+            self.goal_position = get_second_closest_diamond_position(
+                board_bot.position, diamonds
+            )
         else:
-            self.goal_position = closest_diamond(board_bot.position, diamonds)
+            self.goal_position = get_closest_diamond(board_bot.position, diamonds)
 
         current_position = board_bot.position
         if self.goal_position:
