@@ -4,7 +4,9 @@ from typing import Optional
 from game.logic.base import BaseLogic
 from game.models import GameObject, Board, Position
 from ..util import get_direction
+from ..util import get_closest_diamond_position
 from ..util import get_closest_diamond
+
 from ..util import get_rank
 from ..util import get_time_left
 from ..util import get_second_closest_diamond_position
@@ -43,7 +45,7 @@ class Greedy(BaseLogic):
                 board_bot.position, diamonds
             )
         else:
-            self.goal_position = get_closest_diamond(board_bot.position, diamonds)
+            self.goal_position = get_closest_diamond_position(board_bot.position, diamonds)
 
         current_position = board_bot.position
         if self.goal_position:
