@@ -7,6 +7,7 @@ from game.board_handler import BoardHandler
 from game.bot_handler import BotHandler
 from game.logic.random import RandomLogic
 from game.logic.greedy import Greedy
+from game.logic.taylor import Taylor
 from game.util import *
 from game.logic.base import BaseLogic
 
@@ -15,6 +16,7 @@ BASE_URL = "http://localhost:3000/api"
 DEFAULT_BOARD_ID = 1
 CONTROLLERS = {
     "Greedy": Greedy,
+    "Taylor": Taylor,
     "Random": RandomLogic,
 }
 
