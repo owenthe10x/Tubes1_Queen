@@ -45,7 +45,7 @@ class Greedy(BaseLogic):
         )
         # Check if inventory is full
         if (
-            props.diamonds == 5
+            props.diamonds >= 5
             or abs(
                 get_time_to_location(board_bot.position, board_bot.properties.base)
                 - get_time_left(board.game_objects)
@@ -57,7 +57,7 @@ class Greedy(BaseLogic):
             self.goal_position = base
         elif (
             get_closest_diamond(board_bot.position, diamonds).properties.points == 2
-            and props.diamonds >= 5
+            and props.diamonds == 4
         ):
             self.goal_position = get_closest_blue_diamond_position(
                 board_bot.position, diamonds
@@ -76,7 +76,7 @@ class Greedy(BaseLogic):
                 current_position.y,
                 self.goal_position.x,
                 self.goal_position.y,
-                board.game_objects,
+                board,
             )
 
             if delta_x == -1:

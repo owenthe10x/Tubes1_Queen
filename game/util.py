@@ -6,28 +6,81 @@ def is_in_between(point1, point2, point3):
     return point1 <= point2 <= point3  # Check if point2 is between point1 and point3
 
 
-def get_direction(current_x, current_y, dest_x, dest_y, game_objects):
-    teleports = get_teleport_info(game_objects)
-    diamondButton = get_diamond_button(game_objects)
+def get_direction(current_x, current_y, dest_x, dest_y, board):
+    teleports = get_teleport_info(board.game_objects)
+    diamondButton = get_diamond_button(board.game_objects)
     horizontal = True
-    # This will avoid any diamond button and teleports on the way by going around it
+    # Edge case where the bot, the diamond button, and the destination are in the same line on the edge of the board
     if (
-        is_in_between(current_x, diamondButton.position.x, dest_x)
-        and current_y == diamondButton.position.y
-    ) or (
-        is_in_between(dest_x, diamondButton.position.x, current_x)
+        (
+            is_in_between(current_x, diamondButton.position.x, dest_x)
+            or is_in_between(dest_x, diamondButton.position.x, current_x)
+        )
+        and current_y == dest_y
         and current_y == diamondButton.position.y
     ):
+        print("masuk sini")
+        if current_y != board.height - 1:
+            return (0, 1)
+        else:
+            return (0, -1)
+    elif (
+        (
+            is_in_between(current_y, diamondButton.position.y, dest_y)
+            or is_in_between(dest_y, diamondButton.position.y, current_y)
+        )
+        and current_x == dest_x
+        and current_x == diamondButton.position.x
+    ):
+        print("msuk pak eko")
+        if current_x != board.width - 1:
+            return (1, 0)
+        else:
+            return (-1, 0)
+
+    # This will avoid any diamond button on the way to the destionation
+    if (
+        is_in_between(current_y, diamondButton.position.y, dest_y)
+        or is_in_between(dest_y, diamondButton.position.y, current_y)
+    ) and (dest_x == diamondButton.position.x or current_y == diamondButton.position.y):
+        print("anjay pak eko")
         horizontal = False
 
     for teleport in teleports:
+        # Edge case where the bot, the teleport, and the destination are in the same line on the edge of the board
         if (
-            is_in_between(current_x, teleport.position.x, dest_x)
-            and current_y == teleport.position.y
-        ) or (
-            is_in_between(dest_x, teleport.position.x, current_x)
+            (
+                is_in_between(current_x, teleport.position.x, dest_x)
+                or is_in_between(dest_x, teleport.position.x, current_x)
+            )
+            and current_y == dest_y
             and current_y == teleport.position.y
         ):
+            print("masuk sini")
+            if current_y != board.height - 1:
+                return (0, 1)
+            else:
+                return (0, -1)
+        elif (
+            (
+                is_in_between(current_y, teleport.position.y, dest_y)
+                or is_in_between(dest_y, teleport.position.y, current_y)
+            )
+            and current_x == dest_x
+            and current_x == teleport.position.x
+        ):
+            print("msuk pak eko")
+            if current_x != board.width - 1:
+                return (1, 0)
+            else:
+                return (-1, 0)
+
+        # This will avoid any teleport on the way to the destionation=
+        if (
+            is_in_between(current_y, teleport.position.y, dest_y)
+            or is_in_between(dest_y, teleport.position.y, current_y)
+        ) and (dest_x == teleport.position.x or current_y == teleport.position.y):
+            print("kelas pak eko")
             horizontal = False
 
     delta_x = clamp(dest_x - current_x, -1, 1)
@@ -35,6 +88,8 @@ def get_direction(current_x, current_y, dest_x, dest_y, game_objects):
 
     if delta_x != 0 and horizontal:
         delta_y = 0
+    else:
+        delta_x = 0
     return (delta_x, delta_y)
 
 

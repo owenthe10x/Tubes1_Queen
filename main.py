@@ -7,16 +7,17 @@ from game.board_handler import BoardHandler
 from game.bot_handler import BotHandler
 from game.logic.random import RandomLogic
 from game.logic.greedy import Greedy
-from game.logic.taylor import Taylor
+# from game.logic.taylor import Taylor
 from game.util import *
 from game.logic.base import BaseLogic
+import time
 
 init()
 BASE_URL = "http://localhost:3000/api"
 DEFAULT_BOARD_ID = 1
 CONTROLLERS = {
     "Greedy": Greedy,
-    "Taylor": Taylor,
+    # "Taylor": Taylor,
     "Random": RandomLogic,
 }
 
@@ -178,7 +179,9 @@ while True:
         break
 
     # Calculate next move
+    start_time = time.time()
     delta_x, delta_y = bot_logic.next_move(board_bot, board)
+    print("--- %s seconds ---" % (time.time() - start_time))
     # delta_x, delta_y = (1, 0)
     if not board.is_valid_move(board_bot.position, delta_x, delta_y):
         print(
