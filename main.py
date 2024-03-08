@@ -24,7 +24,7 @@ CONTROLLERS = {
     "Ikhwan": Uzi,
     "Random": RandomLogic,
     "Qika": Heuristik,
-    "Thoriq": best_and_closest
+    "Thoriq": best_and_closest,
 }
 
 ###############################################################################
@@ -184,10 +184,20 @@ while True:
         # Managed to get game over
         break
 
-    # Calculate next move
-    start_time = time.time()
-    delta_x, delta_y = bot_logic.next_move(board_bot, board)
-    print("--- %s seconds ---" % (time.time() - start_time))
+    try:
+        # Calculate next move
+        start_time = time.time()
+        delta_x, delta_y = bot_logic.next_move(board_bot, board)
+        print("--- %s seconds ---" % (time.time() - start_time))
+
+        # Process the move
+        # ...
+
+    except Exception as e:
+        # Handle the error
+        print("An error occurred during next move calculation:", e)
+        # Optionally, you can choose to break out of the loop or handle the error in some other way
+        # break  # Break out of the loop if you want to stop the program
     # delta_x, delta_y = (1, 0)
     if not board.is_valid_move(board_bot.position, delta_x, delta_y):
         print(

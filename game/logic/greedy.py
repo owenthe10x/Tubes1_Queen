@@ -26,7 +26,6 @@ def get_direction(current_x, current_y, dest_x, dest_y, board):
     teleports = get_teleport_info(board.game_objects)
     diamondButton = get_diamond_button(board.game_objects)
     bots = board.bots
-    print("bot nih bang", bots)
     horizontal = True
     isDestDiaButton = (
         dest_x == diamondButton.position.x and dest_y == diamondButton.position.y
@@ -170,6 +169,17 @@ def get_closest_blue_diamond_position(pos: Position, diamonds: list):
     ).position
 
 
+def get_second_closest_diamond(pos: Position, diamonds: list):
+    return min(
+        [
+            d
+            for d in diamonds
+            if d.position != get_closest_diamond_position(pos, diamonds)
+        ],
+        key=lambda d: abs(d.position.x - pos.x) + abs(d.position.y - pos.y),
+    ).position
+
+
 def get_closest_bot(pos: Position, bots: list):
     return min(
         bots,
@@ -209,9 +219,13 @@ def clamp(n, smallest, largest):
     return max(smallest, min(n, largest))
 
 
-def killable(my_bot: any, enemies: any, diamonds: any) -> bool:
+def killable(my_bot: any, enemies: any, diamonds: any) -> Position:
+    qualified_diamonds = []
     # Check if other bot is killable which is in a position where the closest diamond is the same as my bot and the other bot is exactly 1 tile closer to the diamond than our bot
     for enemy in enemies:
+        if enemy.position == my_bot.position:
+            continue
+
         my_bot_closest_diamond = get_closest_diamond_position(my_bot.position, diamonds)
         enemy_closest_diamond = get_closest_diamond_position(enemy.position, diamonds)
         if not position_equals(my_bot_closest_diamond, enemy_closest_diamond):
@@ -221,21 +235,22 @@ def killable(my_bot: any, enemies: any, diamonds: any) -> bool:
             - get_time_to_location(enemy.position, enemy_closest_diamond)
             == 1000
         ):
-            return True
-    return False
+            qualified_diamonds.append(my_bot_closest_diamond)
+    if len(qualified_diamonds) == 0:
+        return my_bot.position
+    return get_closest_diamond_position(my_bot.position, qualified_diamonds)
 
 
-def suicide(my_bot: any, enemies: any, diamonds: any) -> bool:
+def suicide(my_bot: any, enemies: any, diamonds: any, dest_diamond: Position) -> bool:
     # Check if my bot is in an unsafe position which is in a position where the closest diamond is the same as some bots and my bot is exactly 1 tile closer to the diamond than the other bot
     for enemy in enemies:
-        my_bot_closest_diamond = get_closest_diamond_position(my_bot.position, diamonds)
         enemy_closest_diamond = get_closest_diamond_position(enemy.position, diamonds)
-        if not position_equals(my_bot_closest_diamond, enemy_closest_diamond):
+        if not position_equals(dest_diamond, enemy_closest_diamond):
             continue
         elif (
             get_time_to_location(my_bot.position, enemy_closest_diamond)
-            - get_time_to_location(enemy.position, my_bot_closest_diamond)
-            == 1000
+            - get_time_to_location(enemy.position, dest_diamond)
+            == 0
         ):
             return True
     return False
@@ -291,6 +306,8 @@ class Greedy(BaseLogic):
 
         # Check if inventory is empty and if diamond button is closer than the closest diamond
         if props.diamonds == 0:
+            killable_pos = killable(board_bot, board.bots, diamonds)
+            print("killable_pos", killable_pos)
             if check_if_should_go_for_diamond_button(
                 board_bot,
                 board.game_objects,
@@ -298,6 +315,13 @@ class Greedy(BaseLogic):
             ):
                 # Go to diamond button if the closest diamond mine is much further than the diamond button
                 self.goal_position = get_diamond_button(board.game_objects).position
+            elif killable_pos is not board_bot.position and get_time_to_location(
+                board_bot.position, killable_pos
+            ) <= get_time_to_location(
+                board_bot.position,
+                get_closest_diamond_in_mine(diamonds, board_bot.position),
+            ):
+                self.goal_position = killable_pos
             elif not (
                 get_time_to_location(
                     board_bot.position,
@@ -355,9 +379,17 @@ class Greedy(BaseLogic):
                 self.goal_position = get_diamond_button(board.game_objects).position
             else:
                 # Go to the closest diamond
-                self.goal_position = get_closest_diamond_position(
+                closest_diamond = get_closest_diamond_position(
                     board_bot.position, diamonds
                 )
+                if suicide(board_bot, board.bots, diamonds, closest_diamond):
+                    self.goal_position = get_second_closest_diamond(
+                        board_bot.position, diamonds
+                    )
+                else:
+                    self.goal_position = get_closest_diamond_position(
+                        board_bot.position, diamonds
+                    )
         # store the current position of our robot
         current_position = board_bot.position
 
