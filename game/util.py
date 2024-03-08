@@ -137,14 +137,13 @@ def get_closest_diamond(pos: Position, diamonds: list):
     )
 
 
-def check_if_should_go_for_diamond_button(bot, game_objects, diamonds):
-    return get_time_left(game_objects) < (
+def check_if_should_go_for_diamond_button(bot, game_objects, diamond_location):
+    return (
         get_time_to_location(
             bot.position, get_closest_diamond_position(bot.position, diamonds)
         )
-        + get_time_to_location(
-            get_closest_diamond_position(bot.position, diamonds), bot.properties.base
-        )
+        - get_time_to_location(bot.position, get_diamond_button(game_objects).position)
+        > 5000
     )
 
 
@@ -205,14 +204,36 @@ def clamp(n, smallest, largest):
     return max(smallest, min(n, largest))
 
 
-def killable(my_bot: any, enemy: any, diamond_pos: Position) -> bool:
-    # Check if the enemy is in a killable position which is a position which has the same distance to the diamond as my_bot
-    return (
-        abs(my_bot.position.x - diamond_pos.x) + abs(my_bot.position.y - diamond_pos.y)
-        == abs(enemy.position.x - diamond_pos.x) + abs(enemy.position.y - diamond_pos.y)
-        and my_bot.properties.diamonds
-        == 5  # wont kill the enemy if my_bot already has 5 diamonds
-    )
+def killable(my_bot: any, enemies: any, diamonds: any) -> bool:
+    # Check if other bot is killable which is in a position where the closest diamond is the same as my bot and the other bot is exactly 1 tile closer to the diamond than our bot
+    for enemy in enemies:
+        my_bot_closest_diamond = get_closest_diamond_position(my_bot.position, diamonds)
+        enemy_closest_diamond = get_closest_diamond_position(enemy.position, diamonds)
+        if not position_equals(my_bot_closest_diamond, enemy_closest_diamond):
+            continue
+        elif (
+            get_time_to_location(my_bot.position, my_bot_closest_diamond)
+            - get_time_to_location(enemy.position, enemy_closest_diamond)
+            == 1000
+        ):
+            return True
+    return False
+
+
+def suicide(my_bot: any, enemies: any, diamonds: any) -> bool:
+    # Check if my bot is in an unsafe position which is in a position where the closest diamond is the same as some bots and my bot is exactly 1 tile closer to the diamond than the other bot
+    for enemy in enemies:
+        my_bot_closest_diamond = get_closest_diamond_position(my_bot.position, diamonds)
+        enemy_closest_diamond = get_closest_diamond_position(enemy.position, diamonds)
+        if not position_equals(my_bot_closest_diamond, enemy_closest_diamond):
+            continue
+        elif (
+            get_time_to_location(my_bot.position, enemy_closest_diamond)
+            - get_time_to_location(enemy.position, my_bot_closest_diamond)
+            == 1000
+        ):
+            return True
+    return False
 
 
 # 5x5 section yang paling banyak poin bukan diamond karna red diamond lebih worth it

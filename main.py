@@ -7,9 +7,13 @@ from game.board_handler import BoardHandler
 from game.bot_handler import BotHandler
 from game.logic.random import RandomLogic
 from game.logic.greedy import Greedy
+
 # from game.logic.taylor import Taylor
 from game.util import *
 from game.logic.base import BaseLogic
+from game.logic.qika import Heuristik
+from game.logic.ikhwan import Uzi
+from game.logic.thoriq import best_and_closest
 import time
 
 init()
@@ -17,8 +21,10 @@ BASE_URL = "http://localhost:3000/api"
 DEFAULT_BOARD_ID = 1
 CONTROLLERS = {
     "Greedy": Greedy,
-    # "Taylor": Taylor,
+    "Ikhwan": Uzi,
     "Random": RandomLogic,
+    "Qika": Heuristik,
+    "Thoriq": best_and_closest
 }
 
 ###############################################################################
