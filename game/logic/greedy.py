@@ -174,7 +174,9 @@ def get_second_closest_diamond(pos: Position, diamonds: list):
         [
             d
             for d in diamonds
-            if d.position != get_closest_diamond_position(pos, diamonds)
+            if not position_equals(
+                d.position, get_closest_diamond_position(pos, diamonds)
+            )
         ],
         key=lambda d: abs(d.position.x - pos.x) + abs(d.position.y - pos.y),
     ).position
@@ -242,15 +244,17 @@ def killable(my_bot: any, enemies: any, diamonds: any) -> Position:
 
 
 def suicide(my_bot: any, enemies: any, diamonds: any, dest_diamond: Position) -> bool:
+    print("musuh", enemies)
     # Check if my bot is in an unsafe position which is in a position where the closest diamond is the same as some bots and my bot is exactly 1 tile closer to the diamond than the other bot
     for enemy in enemies:
+        if enemy.position == my_bot.position:
+            continue
         enemy_closest_diamond = get_closest_diamond_position(enemy.position, diamonds)
         if not position_equals(dest_diamond, enemy_closest_diamond):
             continue
         elif (
-            get_time_to_location(my_bot.position, enemy_closest_diamond)
-            - get_time_to_location(enemy.position, dest_diamond)
-            == 0
+            get_time_to_location(enemy.position, dest_diamond) == 1000
+            and get_time_to_location(my_bot.position, dest_diamond) == 1000
         ):
             return True
     return False
@@ -306,6 +310,7 @@ class Greedy(BaseLogic):
 
         # Check if inventory is empty and if diamond button is closer than the closest diamond
         if props.diamonds == 0:
+            print("diamond 0")
             killable_pos = killable(board_bot, board.bots, diamonds)
             print("killable_pos", killable_pos)
             if check_if_should_go_for_diamond_button(
@@ -313,6 +318,8 @@ class Greedy(BaseLogic):
                 board.game_objects,
                 find_diamond_mine(diamonds, board_bot.position),
             ):
+                print("ke dia button")
+
                 # Go to diamond button if the closest diamond mine is much further than the diamond button
                 self.goal_position = get_diamond_button(board.game_objects).position
             elif killable_pos is not board_bot.position and get_time_to_location(
@@ -321,6 +328,8 @@ class Greedy(BaseLogic):
                 board_bot.position,
                 get_closest_diamond_in_mine(diamonds, board_bot.position),
             ):
+                print("ke kill bot")
+
                 self.goal_position = killable_pos
             elif not (
                 get_time_to_location(
@@ -333,10 +342,12 @@ class Greedy(BaseLogic):
                 )
                 > 5000
             ):
+                print("ke diamond mine")
                 self.goal_position = get_closest_diamond_in_mine(
                     diamonds, board_bot.position
                 )
             else:
+                print("ke diamond biasa")
                 self.goal_position = get_closest_diamond_position(
                     board_bot.position, diamonds
                 )
@@ -356,6 +367,7 @@ class Greedy(BaseLogic):
                 )
             )
         ):
+            print("ke base")
             # Move to base
             base = board_bot.properties.base
             self.goal_position = base
@@ -364,6 +376,7 @@ class Greedy(BaseLogic):
             get_closest_diamond(board_bot.position, diamonds).properties.points == 2
             and props.diamonds == 4
         ):
+            print("ke blue dia terdekat")
             # It will go to the closest blue diamond to fill the inventory
             self.goal_position = get_closest_blue_diamond_position(
                 board_bot.position, diamonds
@@ -375,6 +388,7 @@ class Greedy(BaseLogic):
                 board.game_objects,
                 diamonds,
             ):
+                print("ke dia button edisi 2")
                 # Go to diamond button to reset board so that enemies who are close to their base will have to change direction because their base changed
                 self.goal_position = get_diamond_button(board.game_objects).position
             else:
@@ -382,11 +396,13 @@ class Greedy(BaseLogic):
                 closest_diamond = get_closest_diamond_position(
                     board_bot.position, diamonds
                 )
-                if suicide(board_bot, board.bots, diamonds, closest_diamond):
+                if suicide(board_bot, board.bots, diamonds, closest_diamond) == True:
+                    print("bahaya brow")
                     self.goal_position = get_second_closest_diamond(
                         board_bot.position, diamonds
                     )
                 else:
+                    print("amang")
                     self.goal_position = get_closest_diamond_position(
                         board_bot.position, diamonds
                     )
