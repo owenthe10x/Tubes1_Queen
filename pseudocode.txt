@@ -12,152 +12,205 @@ FROM game.models IMPORT GameObject, Board, Position
 FROM current directory's models IMPORT Position
 
 // Function to determine if the bot is in danger based on its position and the positions of enemies
-FUNCTION am_i_in_danger(bot, enemies)
+FUNCTION am_i_in_danger(bot: any, enemies: any) -> boolean
     // Iterate through each enemy in the enemies list
-    FOR EACH enemy IN enemies
+    FOR EACH enemy IN enemies:
         // Calculate the Manhattan distance between the bot and the enemy
-        IF ABS(enemy.position.x - bot.position.x) + ABS(enemy.position.y - bot.position.y) <= 2 THEN
+        IF (ABS(enemy.position.x - bot.position.x) + ABS(enemy.position.y - bot.position.y) <= 2) THEN
             // If the distance is 2 or less, bot is in danger
-            RETURN True
+            -> True
     // If none of the enemies are within the danger distance, return False
-    RETURN False
+    -> False
 
 // Function to check if a point is in between two other points
-FUNCTION is_in_between(point1, point2, point3)
+FUNCTION is_in_between(point1: any, point2: any, point3: any) -> bool
     // Returns True if point2 is between point1 and point3, inclusively
-    RETURN point1 <= point2 AND point2 <= point3
+    -> point1 <= point2 AND point2 <= point3
 
-FUNCTION get_direction(current_x, current_y, dest_x, dest_y, board)
-    teleports = get_teleport_info(board.game_objects)
-    diamondButton = get_diamond_button(board.game_objects)
-    bots = board.bots
-    PRINT("bot nih bang", bots)
-    horizontal = True
-    isDestDiaButton = (dest_x == diamondButton.position.x AND dest_y == diamondButton.position.y)
+FUNCTION get_direction(current_x: any, current_y: any, dest_x: any, dest_y: any, board: any) -> (int, int)
+    teleports <- get_teleport_info(board.game_objects)
+    diamondButton <- get_diamond_button(board.game_objects)
+    bots <- board.bots
+    OUTPUT("bot nih bang", bots)
+    horizontal <- True
+    isDestDiaButton <- (dest_x == diamondButton.position.x AND dest_y == diamondButton.position.y)
 
-    IF ((is_in_between(current_x, diamondButton.position.x, dest_x) OR is_in_between(dest_x, diamondButton.position.x, current_x)) AND current_y == dest_y AND current_y == diamondButton.position.y AND NOT isDestDiaButton)
-        IF current_y != board.height - 1
-            RETURN (0, 1)
+    IF ((is_in_between(current_x, diamondButton.position.x, dest_x) OR is_in_between(dest_x, diamondButton.position.x, current_x)) AND current_y == dest_y AND current_y == diamondButton.position.y AND NOT isDestDiaButton) THEN
+        IF (current_y != board.height - 1) THEN
+            -> (0, 1)
         ELSE
-            RETURN (0, -1)
-    ELSE IF ((is_in_between(current_y, diamondButton.position.y, dest_y) OR is_in_between(dest_y, diamondButton.position.y, current_y)) AND current_x == dest_x AND current_x == diamondButton.position.x AND NOT isDestDiaButton)
-        IF current_x != board.width - 1
-            RETURN (1, 0)
+            -> (0, -1)
+    ELSE IF ((is_in_between(current_y, diamondButton.position.y, dest_y) OR is_in_between(dest_y, diamondButton.position.y, current_y)) AND current_x == dest_x AND current_x == diamondButton.position.x AND NOT isDestDiaButton) THEN
+        IF (current_x != board.width - 1) THEN
+            -> (1, 0)
         ELSE
-            RETURN (-1, 0)
+            -> (-1, 0)
 
-    IF ((is_in_between(current_y, diamondButton.position.y, dest_y) OR is_in_between(dest_y, diamondButton.position.y, current_y)) AND (dest_x == diamondButton.position.x OR current_y == diamondButton.position.y) AND NOT isDestDiaButton)
-        horizontal = False
+    IF ((is_in_between(current_y, diamondButton.position.y, dest_y) OR is_in_between(dest_y, diamondButton.position.y, current_y)) AND (dest_x == diamondButton.position.x OR current_y == diamondButton.position.y) AND NOT isDestDiaButton) THEN
+        horizontal <- False
 
     FOR EACH teleport IN teleports
-        IF ((is_in_between(current_x, teleport.position.x, dest_x) OR is_in_between(dest_x, teleport.position.x, current_x)) AND current_y == dest_y AND current_y == teleport.position.y)
-            IF current_y != board.height - 1
-                RETURN (0, 1)
+        IF ((is_in_between(current_x, teleport.position.x, dest_x) OR is_in_between(dest_x, teleport.position.x, current_x)) AND current_y == dest_y AND current_y == teleport.position.y) THEN
+            IF (current_y != board.height - 1) THEN
+                -> (0, 1)
             ELSE
-                RETURN (0, -1)
-        ELSE IF ((is_in_between(current_y, teleport.position.y, dest_y) OR is_in_between(dest_y, teleport.position.y, current_y)) AND current_x == dest_x AND current_x == teleport.position.x)
-            IF current_x != board.width - 1
-                RETURN (1, 0)
+                -> (0, -1)
+        ELSE IF ((is_in_between(current_y, teleport.position.y, dest_y) OR is_in_between(dest_y, teleport.position.y, current_y)) AND current_x == dest_x AND current_x == teleport.position.x) THEN
+            IF (current_x != board.width - 1) THEN
+                -> (1, 0)
             ELSE
-                RETURN (-1, 0)
+                -> (-1, 0)
 
-        IF (is_in_between(current_y, teleport.position.y, dest_y) OR is_in_between(dest_y, teleport.position.y, current_y)) AND (dest_x == teleport.position.x OR current_y == teleport.position.y)
-            PRINT("test gan")
-            horizontal = False
+        IF (is_in_between(current_y, teleport.position.y, dest_y) OR is_in_between(dest_y, teleport.position.y, current_y)) AND (dest_x == teleport.position.x OR current_y == teleport.position.y) THEN
+            OUTPUT("test gan")
+            horizontal <- False
 
-    delta_x = clamp(dest_x - current_x, -1, 1)
-    delta_y = clamp(dest_y - current_y, -1, 1)
+    delta_x <- clamp(dest_x - current_x, -1, 1)
+    delta_y <- clamp(dest_y - current_y, -1, 1)
 
-    IF delta_x != 0 AND horizontal
-        delta_y = 0
-    ELSE IF delta_y != 0 AND NOT horizontal
-        delta_x = 0
-    RETURN (delta_x, delta_y)
+    IF (delta_x != 0 AND horizontal) THEN
+        delta_y <- 0
+    ELSE IF (delta_y != 0 AND NOT horizontal) THEN
+        delta_x <- 0
+    -> (delta_x, delta_y)
 
 
-FUNCTION get_diamonds_info(game_objects)
-    RETURN LIST OF obj FOR EACH obj IN game_objects IF obj.type == "DiamondGameObject"
+FUNCTION get_diamonds_info(game_objects: list) -> list
+    -> LIST OF obj FOR EACH obj IN game_objects IF obj.type == "DiamondGameObject"
 
-FUNCTION get_teleport_info(game_objects)
-    RETURN LIST OF obj FOR EACH obj IN game_objects IF obj.type == "TeleportGameObject"
+FUNCTION get_teleport_info(game_objects: list) -> list
+    -> LIST OF obj FOR EACH obj IN game_objects IF obj.type == "TeleportGameObject"
 
-FUNCTION get_time_left(game_objects)
-    FOR EACH item IN game_objects
-        IF item.type == "BotGameObject"
-            RETURN item.properties.milliseconds_left
+FUNCTION get_time_left(game_objects: List) -> Any
+    FOR EACH item IN game_objects:
+        IF (item.type == "BotGameObject") THEN
+            -> item.properties.milliseconds_left
 
-FUNCTION get_closest_diamond(pos, diamonds)
-    RETURN MINIMUM OF diamonds USING KEY:
-        ABS(d.position.x - pos.x) + ABS(d.position.y - pos.y)
+FUNCTION get_closest_diamond(pos: Position, diamonds: list) -> Diamond
+    -> MIN(
+        diamonds,
+        key=lambda d: abs(d.position.x - pos.x) + abs(d.position.y - pos.y),
+    )
 
-FUNCTION check_if_should_go_for_diamond_button(bot, game_objects, diamonds)
-    RETURN (
+FUNCTION check_if_should_go_for_diamond_button(bot: Any, game_objects: Any, diamonds: Any) -> bool
+    -> (
         get_time_to_location(bot.position, get_closest_diamond_position(bot.position, diamonds)) -
         get_time_to_location(bot.position, get_diamond_button(game_objects).position)
         > 5000
     )
 
+FUNCTION get_diamond_button(game_objects: List) -> Item
+    FOR item IN game_objects:
+        IF (item.type == "DiamondButtonGameObject") THEN
+            -> item
 
-FUNCTION get_diamonds_info(game_objects)
-    RETURN [obj FOR obj IN game_objects IF obj.type == "DiamondGameObject"]
+FUNCTION get_closest_diamond_position(pos: Position, diamonds: list) -> Position
+    -> get_closest_diamond(pos, diamonds).position
 
-FUNCTION get_teleport_info(game_objects)
-    RETURN [obj FOR obj IN game_objects IF obj.type == "TeleportGameObject"]
+FUNCTION get_closest_blue_diamond_position(pos: Position, diamonds: list) -> Position
+    -> MIN([d FOR d IN diamonds IF d.properties.points == 1], KEY=lambda d: ABS(d.position.x - pos.x) + ABS(d.position.y - pos.y)).position
 
-FUNCTION get_time_left(game_objects)
-    FOR item IN game_objects
-        IF item.type == "BotGameObject"
-            RETURN item.properties.milliseconds_left
+FUNCTION get_closest_bot(pos: Position, bots: list) -> (list, int)
+    -> MIN(bots, KEY=lambda b: ABS(b.position.x - pos.x) + ABS(b.position.y - pos.y))
 
-FUNCTION get_closest_diamond(pos, diamonds)
-    RETURN MIN(diamonds, KEY=lambda d: ABS(d.position.x - pos.x) + ABS(d.position.y - pos.y))
+FUNCTION get_closest_bot_to_diamond(diamond_pos: Position, bots: list) -> BotGameObject
+    -> MIN(bots, KEY=lambda b: ABS(b.position.x - diamond_pos.x) + ABS(b.position.y - diamond_pos.y))
 
-FUNCTION check_if_should_go_for_diamond_button(bot, game_objects, diamonds)
-    RETURN (get_time_to_location(bot.position, get_closest_diamond_position(bot.position, diamonds)) - get_time_to_location(bot.position, get_diamond_button(game_objects).position) > 5000)
+FUNCTION get_ranked_robots(bots: list) -> list 
+    -> SORTED(bots, KEY=lambda b: b.properties.diamonds, REVERSE=True)
 
-FUNCTION get_diamond_button(game_objects)
-    FOR item IN game_objects
-        IF item.type == "DiamondButtonGameObject"
-            RETURN item
+FUNCTION get_rank(bots: list, bot_id: int) -> int
+    sorted_bots <- SORTED(bots, KEY=lambda b: b.properties.diamonds, REVERSE=True)
+    FOR i, bot IN ENUMERATE(sorted_bots):
+        IF (bot.id == bot_id) THEN
+            -> i + 1
 
-FUNCTION get_closest_diamond_position(pos, diamonds)
-    RETURN get_closest_diamond(pos, diamonds).position
+FUNCTION get_time_to_location(current: Position, dest: Position) -> int
+    -> 1000 * (ABS(dest.x - current.x) + ABS(dest.y - current.y))
 
-FUNCTION get_closest_blue_diamond_position(pos, diamonds)
-    RETURN MIN([d FOR d IN diamonds IF d.properties.points == 1], KEY=lambda d: ABS(d.position.x - pos.x) + ABS(d.position.y - pos.y)).position
+FUNCTION position_equals(a, b) -> bool
+    -> a.x == b.x AND a.y == b.y
 
-FUNCTION get_closest_bot(pos, bots)
-    RETURN MIN(bots, KEY=lambda b: ABS(b.position.x - pos.x) + ABS(b.position.y - pos.y))
+FUNCTION clamp(n, smallest, largest) -> int
+    -> MAX(smallest, MIN(n, largest))
 
-FUNCTION get_closest_bot_to_diamond(diamond_pos, bots)
-    RETURN MIN(bots, KEY=lambda b: ABS(b.position.x - diamond_pos.x) + ABS(b.position.y - diamond_pos.y))
-
-FUNCTION get_ranked_robots(bots)
-    RETURN SORTED(bots, KEY=lambda b: b.properties.diamonds, REVERSE=True)
-
-FUNCTION get_rank(bots, bot_id)
-    sorted_bots = SORTED(bots, KEY=lambda b: b.properties.diamonds, REVERSE=True)
-    FOR i, bot IN ENUMERATE(sorted_bots)
-        IF bot.id == bot_id
-            RETURN i + 1
-
-FUNCTION get_time_to_location(current, dest)
-    RETURN 1000 * (ABS(dest.x - current.x) + ABS(dest.y - current.y))
-
-
-FUNCTION position_equals(a, b)
-    RETURN a.x == b.x AND a.y == b.y
-
-FUNCTION clamp(n, smallest, largest)
-    RETURN MAX(smallest, MIN(n, largest))
-
-FUNCTION killable(my_bot, enemies, diamonds)
-    FOR enemy IN enemies
-        my_bot_closest_diamond = get_closest_diamond_position(my_bot.position, diamonds)
-        enemy_closest_diamond = get_closest_diamond_position(enemy.position, diamonds)
-        IF NOT position_equals(my_bot_closest_diamond, enemy_closest_diamond)
+FUNCTION killable(my_bot: any, enemies: any, diamonds: any) -> bool
+    FOR enemy IN enemies:
+        my_bot_closest_diamond <- get_closest_diamond_position(my_bot.position, diamonds)
+        enemy_closest_diamond <- get_closest_diamond_position(enemy.position, diamonds)
+        IF (NOT position_equals(my_bot_closest_diamond, enemy_closest_diamond)) THEN
             CONTINUE
-        ELSE IF get_time_to_location(my_bot.position, my_bot_closest_diamond) - get_time_to_location(enemy.position, enemy_closest_diamond) == 1000
+        ELSE IF (get_time_to_location(my_bot.position, my_bot_closest_diamond) - get_time_to_location(enemy.position, enemy_closest_diamond) == 1000) THEN
             RETURN True
-    RETURN False
+    -> False
+
+FUNCTION suicide(my_bot: any, enemies: any, diamonds: any) -> bool
+    FOR enemy IN enemies:
+        my_bot_closest_diamond <- get_closest_diamond_position(my_bot.position, diamonds)
+        enemy_closest_diamond <- get_closest_diamond_position(enemy.position, diamonds)
+        IF (NOT position_equals(my_bot_closest_diamond, enemy_closest_diamond)) THEN
+            CONTINUE
+        ELSE IF (get_time_to_location(my_bot.position, enemy_closest_diamond) - get_time_to_location(enemy.position, my_bot_closest_diamond) == 1000) THEN
+            -> True
+    -> False
+
+FUNCTION find_diamond_mine(diamonds: list, bot_position: Position) -> list
+    max_tile_diamonds <- 0
+    section <- []
+    FOR y IN range(11) DO:
+        FOR x IN range(11) DO:
+            tile_diamonds <- SUM(diamond.properties.points FOR diamond IN diamonds IF y <= diamond.position.y < y + 5 AND x <= diamond.position.x < x + 5)
+            IF (tile_diamonds > max_tile_diamonds) THEN
+                section <- []
+                max_tile_diamonds <- tile_diamonds
+                FOR diamond IN diamonds DO:
+                    IF (y <= diamond.position.y < y + 5 AND x <= diamond.position.x < x + 5) THEN
+                        section.APPEND(diamond)
+    -> section
+
+FUNCTION get_closest_diamond_in_mine(diamonds: list, bot_position: position) -> any
+    -> get_closest_diamond_position(bot_position, find_diamond_mine(diamonds, bot_position))
+
+CLASS Greedy EXTENDS BaseLogic
+    PROCEDURE __init__()
+        self.directions <- [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        self.goal_position <- NULL
+        self.current_direction <- 0
+
+    PROCEDURE next_move(board_bot: GameObject, board: Board)
+        diamonds <- board.diamonds
+        props <- board_bot.properties
+
+        IF (props.diamonds == 0) THEN
+            IF (check_if_should_go_for_diamond_button(board_bot, board.game_objects, find_diamond_mine(diamonds, board_bot.position))) THEN
+                self.goal_position <- get_diamond_button(board.game_objects).position
+            ELSE IF (NOT (get_time_to_location(board_bot.position, get_closest_diamond_in_mine(diamonds, board_bot.position)) - get_time_to_location(board_bot.position, get_closest_diamond_position(board_bot.position, diamonds)) > 5000)) THEN
+                self.goal_position <- get_closest_diamond_in_mine(diamonds, board_bot.position)
+            ELSE
+                self.goal_position <- get_closest_diamond_position(board_bot.position, diamonds)
+        ELSE IF (props.diamonds >= 5 OR (props.diamonds > 0 AND abs(get_time_to_location(board_bot.position, board_bot.properties.base) - get_time_left(board.game_objects)) <= 2000)) THEN
+            base <- board_bot.properties.base
+            self.goal_position <- base
+        ELSE IF (get_closest_diamond(board_bot.position, diamonds).properties.points == 2 AND props.diamonds == 4) THEN
+            self.goal_position <- get_closest_blue_diamond_position(board_bot.position, diamonds)
+        ELSE
+            IF (check_if_should_go_for_diamond_button(board_bot, board.game_objects, diamonds)) THEN
+                self.goal_position <- get_diamond_button(board.game_objects).position
+            ELSE
+                self.goal_position <- get_closest_diamond_position(board_bot.position, diamonds)
+
+        current_position <- board_bot.position
+
+        IF (self.goal_position) THEN
+            delta_x, delta_y <- get_direction(current_position.x, current_position.y, self.goal_position.x, self.goal_position.y, board)
+        ELSE
+            delta <- self.directions[self.current_direction]
+            delta_x <- delta[0]
+            delta_y <- delta[1]
+            IF random.random() > 0.6
+                self.current_direction <- (self.current_direction + 1) % LENGTH(self.directions)
+
+        OUTPUT("delta_x: ", delta_x, ", delta_y: ", delta_y)
+        OUTPUT("goal", self.goal_position)
+        -> delta_x, delta_y
 
