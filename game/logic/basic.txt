@@ -1,0 +1,47 @@
+# BRUTAL MODE (diamond < 4 and time remaining > 10) // buat ngumpulin diamond
+diamonds_on_board()
+check position taylor_to_bot
+if taylor_to_bot <= 2:
+    run taylor run
+    
+
+# SAFE MODE (diamond >= 4 and time remaining > 10) // buat naro ke base
+go to base then BRUTAL_MODE()
+check position taylor_to_bot
+if taylor_to_bot <= 2:
+    run taylor run
+
+
+# TACKLE MODE (time remaining: 10s)
+if diamond >= 2:
+    go to base
+else:
+    check inventory all bots
+        get_max(bots_inventory)
+                check position taylor_to_bot and bot_to_base // based on coordinates or steps
+                    if taylor_to_bot < bot_to_base:
+                        go to bot
+                    else 
+                        recalculate
+
+
+NOTES:
+diamonds_on_board():
+    if diamond on board <= 5:
+        if taylor_to_diamond < taylor_to_redbutton:
+            go to diamond
+        else 
+            go to redbutton
+    else:
+        check max_diamonds_area()
+
+
+check max_diamonds_area(): // dibagi 4
+    go to closest_diamond_in_max_diamond_area
+
+o o o
+o x o
+o o o
+// x = bot, o= bots territory
+
+calculate steps pertimbangin jarak teleport jugaaaaaaaaaaaaaa ok
